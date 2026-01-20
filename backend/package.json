@@ -1,0 +1,24 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "",
+  "license": "ISC",
+  "author": "j524liu",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "node index.js --trace-warnings"
+  },
+  "dependencies": {
+    "@langchain/classic": "^1.0.9",
+    "@langchain/community": "^1.1.4",
+    "@langchain/core": "^1.1.15",
+    "@langchain/ollama": "^1.2.0",
+    "express": "^5.2.1",
+    "cors": "^2.8.5",
+    "langchain": "^1.2.10",
+    "mysql2": "^3.9.8",
+    "typeorm": "^0.3.28"
+  }
+}
