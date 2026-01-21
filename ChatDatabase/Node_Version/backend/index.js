@@ -73,7 +73,7 @@ const executeSql = tool(
 //    ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '19961026';
 //    FLUSH PRIVILEGES;
 // The DataSource type remains "mysql" — TypeORM will use the mysql2 driver if it's installed.
-const datasource = new DataSource({ type: "mysql", host: "localhost", port: 3306, username: "root", password: "19961026", database: "new" });
+const datasource = new DataSource({ type: "mysql", host: "localhost", port: 3306, username: "root", password: "199656", database: "new" });
 
 let db = await SqlDatabase.fromDataSourceParams({
     appDataSource: datasource,
@@ -114,7 +114,7 @@ async function getSchema() {
 );`;
 
   const llm = new ChatOllama({
-    model: "qwen3:32b",
+    model: "qwen3:8b",
     temperature: 0.6,
     keepAlive: 0,
     // other params...
@@ -195,7 +195,7 @@ async function getSchema() {
         res.write(`data: (time used: ${(end_time - start_time) / 1000} s)\n\n`);
         res.write(`data: [DONE]\n\n`);
         console.log();
-        // res.end();
+        res.end();
     } catch (error) {
       console.error('Error in getReqText:', error);
       res.status(500).send('Internal Server Error');
