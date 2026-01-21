@@ -1,22 +1,14 @@
 import { ChatOllama } from '@langchain/ollama'
-// import { agent } from '@langchain/agents'
 import {createAgent, SystemMessage} from 'langchain'
-import http from 'http'
 import { SqlDatabase } from "@langchain/classic/sql_db"
 import { DataSource } from "typeorm"
 import { tool } from "langchain"
 import * as z from "zod";
-import path from 'path';
-import { fileURLToPath } from 'url';
 import express from "express"
 import cors from "cors"
+import dotenv from "dotenv"
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-async function resolveDbFile() {
-  return path.join(__dirname, 'database.db');
-}
+dotenv.config();
 
 const DENY_RE = /\b(INSERT|UPDATE|DELETE|ALTER|DROP|CREATE|REPLACE|TRUNCATE)\b/i;
 const HAS_LIMIT_TAIL_RE = /\blimit\b\s+\d+(\s*,\s*\d+)?\s*;?\s*$/i;
@@ -73,7 +65,14 @@ const executeSql = tool(
 //    ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '19961026';
 //    FLUSH PRIVILEGES;
 // The DataSource type remains "mysql" — TypeORM will use the mysql2 driver if it's installed.
-const datasource = new DataSource({ type: "mysql", host: "localhost", port: 3306, username: "root", password: "199656", database: "new" });
+const datasource = new DataSource({ 
+  type: process.env.DB_TYPE, 
+  host: process.env.DB_HOST, 
+  port: parseInt(process.env.DB_PORT), 
+  username: process.env.DB_USERNAME, 
+  password: process.env.DB_PASSWORD, 
+  database: process.env.DB_DATABASE 
+});
 
 let db = await SqlDatabase.fromDataSourceParams({
     appDataSource: datasource,
@@ -83,22 +82,6 @@ const dialect = db.appDataSourceOptions.type;
 console.log(`Dialect: ${dialect}`);
 const tableNames = db.allTables.map(t => t.tableName);
 console.log(`Available tables: ${tableNames.join(", ")}`);
-// const sampleResults = await db.run("SELECT * FROM ticket LIMIT 10;");
-// console.log(`Sample output: ${sampleResults}`);
-
-async function getDb() {
-  if (!db) {
-    const dbPath = await resolveDbFile();
-    const datasource = new DataSource({ type: "sqlite", database: dbPath });
-    db = await SqlDatabase.fromDataSourceParams({ appDataSource: datasource });
-  }
-  return db;
-}
-
-async function getSchema() {
-  const db = await getDb();
-  return await db.getTableInfo();
-}
 
 (async () => {
   const schema = `CREATE TABLE ticket (
@@ -114,7 +97,7 @@ async function getSchema() {
 );`;
 
   const llm = new ChatOllama({
-    model: "qwen3:8b",
+    model: process.env.MODEL_NAME,
     temperature: 0.6,
     keepAlive: 0,
     // other params...
@@ -169,13 +152,8 @@ async function getSchema() {
       // 发送请求头
       res.flushHeaders();
       let data = req.query.content
-  //   let str = "testtest\n\n"
-  //   console.log('Received post data:', body);
+
       console.log('Received post data:', data);
-  //   console.log(typeof(data))
-        // agent.invoke({
-        // messages: [{ role: "user", content: "What's the weather in San Francisco?" }],
-        // })
 
         const start_time = new Date();
 
@@ -183,8 +161,6 @@ async function getSchema() {
             { messages: [{ role: "human", content: data }] },
             { streamMode: "messages" }
         )) {
-            // console.log(`node: ${metadata.langgraph_node}`);
-            // console.log(`content: ${JSON.stringify(token.contentBlocks, null, 2)}`);
             if(token.contentBlocks[0].text != "" && metadata.langgraph_node == "model_request") 
             {
                 process.stdout.write(token.contentBlocks[0].text);
@@ -195,6 +171,7 @@ async function getSchema() {
         res.write(`data: (time used: ${(end_time - start_time) / 1000} s)\n\n`);
         res.write(`data: [DONE]\n\n`);
         console.log();
+        //流式传输结束，关闭连接。(使用API测试软件时使用，如配合前端使用，请将本语句注释掉，关闭连接由前端实现。)
         res.end();
     } catch (error) {
       console.error('Error in getReqText:', error);
