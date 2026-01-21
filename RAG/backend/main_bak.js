@@ -110,7 +110,7 @@ const loader = new DirectoryLoader(
     }
 );
 
-// let vectorStore = null;
+let vectorStore = null;
 
 try {
     const loadedVectorStore = await FaissStore.load(
@@ -162,7 +162,7 @@ const retrieveSchema = z.object({ query: z.string() });
 
 const retrieve = tool(
   async ({ query }) => {
-    const retrievedDocs = await vectorStore.similaritySearch(query, 50);
+    const retrievedDocs = await vectorStore.similaritySearch(query, 20);
     const serialized = retrievedDocs
       .map(
         (doc) => `Source: ${doc.metadata.source}\nContent: ${doc.pageContent}`
@@ -209,7 +209,6 @@ const tools = [retrieve, getCurrentTime, getVectorCount];
 const systemPrompt = new SystemMessage(
     "您是一个文档检索助手，可以使用工具对文件内容进行检索。" +
     "检索到相关数据后，优先使用检索到的数据回答用户的问题。不要让用户自己查看文件。回答涉及时间的问题时，请使用获取当前时间工具，确保时间准确无误。不要编造数据" + 
-    // "始终查找全部信息以确保回答的完整性。" + 
     "使用简体中文回答所有问题，不要使用英文。" + 
     "注意：特殊作业与消防、危化品存储无关！" + 
     "直接给出答案，不需要给出推理过程"

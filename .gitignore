@@ -77,3 +77,6 @@ frontend/AI-Chat-obfuscator/dist/
 
 # Local development
 .env.development.local
+
+# continue AI files
+.continue/
