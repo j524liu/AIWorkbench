@@ -52,8 +52,8 @@ wheels/
 # RAG related data files
 RAG/backend/data/chroma/
 RAG/backend/data/faiss/
-RAG/backend/data/processed/
-RAG/backend/data/data/
+# RAG/backend/data/processed/
+# RAG/backend/data/data/
 
 # Temporary files
 *.log
